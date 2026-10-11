@@ -27,7 +27,7 @@ class BoxCountingTests(unittest.TestCase):
         self.assertEqual(GetNb([], q=0), 0)
 
     def test_invalid_spectra(self):
-        for values in ([], [[1, 2]], [1, np.nan], [1, np.inf]):
+        for values in ([], [[1, 2]], [1, np.nan], [1, np.inf], [1+2j]):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 BoxCountingE(values, 2)
         for bins in (0, -1, 1.5, True):

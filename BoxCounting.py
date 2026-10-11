@@ -9,6 +9,8 @@ def BoxCountingE(E, N):
     Input order does not matter. For a constant spectrum NumPy expands the
     zero-width range by 0.5 on each side before making the bins.
     """
+    if np.iscomplexobj(E):
+        raise ValueError("E must be real-valued")
     values = np.asarray(E, dtype=float)
     if values.ndim != 1 or values.size == 0:
         raise ValueError("E must be a non-empty one-dimensional spectrum")
