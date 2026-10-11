@@ -1,53 +1,54 @@
-# using the box counting method to get the spectrum fractal dimension
+"""Box occupancies for a finite real spectrum."""
 import numpy as np
-from matplotlib import pyplot as plt 
-
-def BoxCountingE(E,N):
-    Emax=max(E)
-    Emin=min(E)
-
-    L=np.size(E,0)
-    dE=(Emax-Emin)/(N)
-    
-    Data=np.zeros([1,N+1])
-    E_all=list()
-    E_begin=Emin
-    # 双指针
-    n=0
-    for m in range(L):
-        if E[m]>=E_begin and E[m]< E_begin+dE:
-            Data[0,n]=Data[0,n]+1
-        else:
-            E_all.append(E_begin)
-            E_begin=E_begin+dE
-            n=n+1
-            Data[0,n]=Data[0,n]+1
-    E_all.append(E_begin)
-    Data[0,-2]=Data[0,-2]+Data[0,-1]
-    Data1=Data[0,:].tolist()
-
-    return Data1[:-1],E_all
 
 
-def GetNb(data,q=0.001):
-    Nb=0
-    for m in range(data):
-        Nb=Nb+data[m]^(q)
-    return Nb
+def BoxCountingE(E, N):
+    """Return N occupancies and their left edges over [min(E), max(E)].
+
+    Bins are left-closed and right-open, except the last bin includes max(E).
+    Input order does not matter. For a constant spectrum NumPy expands the
+    zero-width range by 0.5 on each side before making the bins.
+    """
+    if np.iscomplexobj(E):
+        raise ValueError("E must be real-valued")
+    values = np.asarray(E, dtype=float)
+    if values.ndim != 1 or values.size == 0:
+        raise ValueError("E must be a non-empty one-dimensional spectrum")
+    if not np.all(np.isfinite(values)):
+        raise ValueError("E must contain only finite values")
+    if isinstance(N, (bool, np.bool_)) or not isinstance(N, (int, np.integer)) or N <= 0:
+        raise ValueError("N must be a positive integer")
+
+    counts, edges = np.histogram(values, bins=N)
+    return counts.tolist(), edges[:-1].tolist()
 
 
-def HistPlot(data,E_all):
-    plt.plot(E_all,data)
+def GetNb(data, q=0.001):
+    """Sum count**q over occupied boxes; q=0 counts the occupied boxes.
+
+    The historical default q is retained. Empty boxes do not contribute,
+    including for q <= 0.
+    """
+    counts = np.asarray(data, dtype=float)
+    if counts.ndim != 1 or not np.all(np.isfinite(counts)) or np.any(counts < 0):
+        raise ValueError("data must be a one-dimensional array of finite non-negative counts")
+    if not np.isfinite(q):
+        raise ValueError("q must be finite")
+    return float(np.sum(counts[counts > 0] ** q))
+
+
+def HistPlot(data, E_all):
+    # Plotting is optional when importing the numerical functions.
+    from matplotlib import pyplot as plt
+    plt.plot(E_all, data)
     plt.show()
-    return
 
 
 # Benchmark
-if __name__=='__main__':
-    E=np.linspace(1,100,2000)
-    print(np.size(E,0))
-    N=10
-    data, E_all=BoxCountingE(E,N)
-    print(data,E_all)
-   # print(E_all)
-    HistPlot(data,E_all)
+if __name__ == "__main__":
+    E = np.linspace(1, 100, 2000)
+    N = 10
+    data, E_all = BoxCountingE(E, N)
+    print(data, E_all)
+    HistPlot(data, E_all)
+
